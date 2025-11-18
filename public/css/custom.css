@@ -1,0 +1,196 @@
+/*
+ * =========================================
+ * CUSTOM STYLESHEET OPENKAS SKENSA (V8 - SHARP & CONTRAST)
+ * Perbaikan: Text Visibility pada Stats & Radius lebih kotak
+ * =========================================
+ */
+
+/* 1. IMPORT FONT */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* -- KEMBALIKAN NAMA VARIABEL (Agar HTML Dashboard terbaca) -- */
+    --skensa-blue: #4A7AB3;       /* Biru Utama */
+    --skensa-dark-blue: #1C2A45;  /* Navy Gelap (Penting untuk Kartu Saldo!) */
+    --skensa-teal: #2AA5A5;       /* Teal (Penting untuk Kartu Pemasukan!) */
+    
+    /* -- Warna UI -- */
+    --bg-body: #F8FAFC;           /* Abu-abu sangat bersih */
+    --bg-surface: #FFFFFF;        /* Putih Murni */
+    --text-main: #334155;         /* Teks Gelap */
+    --text-muted: #64748B;        /* Teks Abu-abu */
+    --border-light: #E2E8F0;      /* Garis halus */
+}
+
+/* --- 2. GLOBAL --- */
+body {
+    background-color: var(--bg-body) !important;
+    font-family: 'Inter', sans-serif !important;
+    color: var(--text-main) !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--skensa-dark-blue);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* --- 3. NAVBAR --- */
+.navbar.bg-white {
+    background-color: var(--bg-surface) !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* Shadow tipis */
+    border-bottom: 1px solid var(--border-light);
+    padding: 0.8rem 0;
+}
+
+.navbar-brand {
+    color: var(--skensa-dark-blue) !important;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.navbar .nav-link.text-primary {
+    color: var(--skensa-blue) !important;
+    font-weight: 600 !important; /* Lebih tebal biar jelas */
+}
+
+.nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.nav-link:hover { color: var(--skensa-blue) !important; }
+
+/* --- 4. CARDS (LEBIH KOTAK) --- */
+.card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light) !important; /* Balikin border tipis biar tegas */
+    /* ✅ PERBAIKAN RADIUS: Dari 16px jadi 8px (Lebih kotak) */
+    border-radius: 12px; 
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-light);
+    padding: 1rem 1.25rem;
+    font-weight: 700;
+    color: var(--skensa-dark-blue);
+    font-size: 0.95rem;
+    text-transform: uppercase; /* Huruf besar biar rapi */
+    letter-spacing: 0.05em;
+}
+
+.card-body { padding: 1.5rem; }
+
+/* --- 5. KARTU STATISTIK (FIX WARNA) --- */
+/* Kita paksa warnanya lewat CSS juga biar aman */
+.card.bg-primary { 
+    background-color: var(--skensa-dark-blue) !important; 
+    border: none !important;
+}
+.card.bg-success { 
+    background-color: var(--skensa-teal) !important; 
+    border: none !important;
+}
+.card.bg-danger { 
+    background-color: #EF4444 !important; 
+    border: none !important;
+}
+
+/* Pastikan teks di dalam kartu berwarna itu PUTIH */
+.card.text-white h2, 
+.card.text-white .card-header {
+    color: #FFFFFF !important;
+}
+
+/* --- 6. BUTTONS (LEBIH KOTAK) --- */
+.btn {
+    /* ✅ PERBAIKAN RADIUS: Jadi 6px */
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background-color: var(--skensa-blue);
+    border-color: var(--skensa-blue);
+}
+.btn-primary:hover {
+    background-color: #365E8D;
+    border-color: #365E8D;
+}
+
+.btn-success {
+    background-color: var(--skensa-teal);
+    border-color: var(--skensa-teal);
+}
+.btn-success:hover {
+    background-color: #218080;
+    border-color: #218080;
+}
+
+.btn-outline-primary {
+    color: var(--skensa-blue);
+    border-color: var(--border-light); /* Border abu-abu saat diam */
+    background-color: white;
+}
+.btn-outline-primary:hover {
+    border-color: var(--skensa-blue);
+    background-color: var(--skensa-blue);
+    color: white;
+}
+
+/* --- 7. FORM INPUT --- */
+.form-control, .form-select {
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px; /* Radius konsisten */
+    color: var(--skensa-dark-blue);
+    padding: 0.6rem 1rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--skensa-blue);
+    box-shadow: 0 0 0 3px rgba(74, 122, 179, 0.15); /* Glow lebih tipis */
+}
+.form-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-main);
+}
+
+/* --- 8. TABEL --- */
+.table { margin-bottom: 0; }
+.table thead th {
+    background-color: #F8FAFC;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-light);
+}
+.table td {
+    vertical-align: middle;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Badge Status */
+.badge {
+    padding: 0.4em 0.8em;
+    border-radius: 4px; /* Sedikit kotak */
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.badge.bg-success { background-color: #D1FAE5 !important; color: #065F46 !important; }
+.badge.bg-danger { background-color: #FEE2E2 !important; color: #991B1B !important; }
+.table-success > td { background-color: #F0FDFA !important; }
+.table-danger > td { background-color: #FEF2F2 !important; }
+
+/* Saldo Text di Kartu Detail */
+.display-4.text-success { color: var(--skensa-teal) !important; font-weight: 700; }
