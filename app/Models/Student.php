@@ -15,7 +15,6 @@ class Student extends Model
      * @var array<int, string>
      */
     
-    // ✅ TAMBAHKAN KODE INI
     protected $fillable = [
         'school_class_id',
         'nomor_absen',

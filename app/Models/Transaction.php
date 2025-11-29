@@ -11,11 +11,9 @@ class Transaction extends Model
 
     public function student()
     {
-        // Relasi ke Model Student
         return $this->belongsTo(Student::class);
     }
 
-    // ✅ TAMBAHKAN INI
     protected $fillable = [
         'school_class_id',
         'student_id',

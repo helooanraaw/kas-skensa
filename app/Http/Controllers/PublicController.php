@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Transaction;
-use Carbon\Carbon; // <-- PENTING UNTUK HITUNG TANGGAL
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,10 +16,8 @@ class PublicController extends Controller
      */
     public function landing()
     {
-        // Kita kirim data kelas ke halaman depan
         $classes = \App\Models\SchoolClass::orderBy('name', 'asc')->get();
 
-        // Top global payers (seluruh jurusan) -- ambil top 10
         $topPayers = DB::table('transactions')
             ->join('students', 'transactions.student_id', '=', 'students.id')
             ->join('school_classes', 'students.school_class_id', '=', 'school_classes.id')
@@ -72,7 +70,6 @@ class PublicController extends Controller
     {
         $classes = SchoolClass::orderBy('name', 'asc')->get();
 
-        // Arahkan ke view baru yang sudah di-rename
         return view('public.kas_index', [
             'classes' => $classes
         ]);
@@ -83,11 +80,9 @@ class PublicController extends Controller
      */
     public function showClass(Request $request, $slug)
     {
-        // 1. Ambil Data Kelas
         $class = SchoolClass::where('slug', $slug)->firstOrFail();
         $class_id = $class->id;
 
-        // 2. Hitung Saldo Kas (Optimized)
         $sums = Transaction::where('school_class_id', $class_id)
                     ->selectRaw("SUM(CASE WHEN type = 'masuk' THEN amount ELSE 0 END) as total_masuk")
                     ->selectRaw("SUM(CASE WHEN type = 'keluar' THEN amount ELSE 0 END) as total_keluar")
@@ -95,7 +90,6 @@ class PublicController extends Controller
         
         $saldoAkhir = ($sums->total_masuk ?? 0) - ($sums->total_keluar ?? 0);
 
-        // 3. Hitung Tagihan Wajib
         $startDate = Carbon::parse('2025-07-21');
         $today = Carbon::now();
         $startOfMonth = $today->copy()->startOfMonth();
@@ -110,21 +104,16 @@ class PublicController extends Controller
         }
         $totalWajibBayar = $periodsPassed * $class->tagihan_nominal;
 
-        // 4. AMBIL SISWA + TRANSAKSI DETILNYA (PENTING!)
-        // Kita gunakan 'with' untuk mengambil rincian transaksi (history)
         $students = Student::where('school_class_id', $class_id)
             ->with(['transactions' => function($query) {
-                // Ambil hanya pemasukan, urutkan dari terbaru
                 $query->where('type', 'masuk')->orderBy('date', 'desc');
             }])
             ->get();
         
-        // Hitung manual total bayar dari data yang sudah di-load (biar hemat query)
         $siswaLunas = 0;
         $siswaNunggak = 0;
 
         foreach ($students as $student) {
-            // Hitung total dari collection transactions
             $student->total_paid = $student->transactions->sum('amount');
             $student->tunggakan = $totalWajibBayar - $student->total_paid;
 
@@ -132,7 +121,6 @@ class PublicController extends Controller
             else $siswaLunas++;
         }
 
-        // Ranking Logic
         $rankedStudents = $students->sortByDesc('total_paid')->values();
         foreach ($students as $student) {
             $student->rank = $rankedStudents->search(function($item) use ($student) {
@@ -140,20 +128,17 @@ class PublicController extends Controller
             }) + 1;
         }
 
-        // Filter Tampilan
         $sort = $request->input('sort', 'absen');
         if ($sort == 'tertinggi') $students = $students->sortByDesc('total_paid');
         elseif ($sort == 'terendah') $students = $students->sortBy('total_paid');
         else $students = $students->sortBy('nomor_absen');
 
-        // 5. Ambil Pengeluaran
         $pengeluaran = Transaction::where('school_class_id', $class_id)
                                 ->where('type', 'keluar')
                                 ->orderBy('date', 'desc')
                                 ->limit(50) 
                                 ->get();
 
-        // 6. Data Grafik
         $monthlyStats = Transaction::where('school_class_id', $class_id)
                             ->whereBetween('date', [$startOfMonth, $today])
                             ->selectRaw("SUM(CASE WHEN type = 'masuk' THEN amount ELSE 0 END) as masuk")
@@ -163,7 +148,6 @@ class PublicController extends Controller
         $totalMasukBulanIni = $monthlyStats->masuk ?? 0;
         $totalKeluarBulanIni = $monthlyStats->keluar ?? 0;
 
-        // Data Progres 30 Hari
         $dates = [];
         $pemasukanPerHari = [];
         $pengeluaranPerHari = [];
