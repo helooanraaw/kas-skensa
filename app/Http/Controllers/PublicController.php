@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Transaction;
 use Carbon\Carbon; // <-- PENTING UNTUK HITUNG TANGGAL
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PublicController extends Controller
 {
@@ -17,10 +18,51 @@ class PublicController extends Controller
     {
         // Kita kirim data kelas ke halaman depan
         $classes = \App\Models\SchoolClass::orderBy('name', 'asc')->get();
-        
+
+        // Top global payers (seluruh jurusan) -- ambil top 10
+        $topPayers = DB::table('transactions')
+            ->join('students', 'transactions.student_id', '=', 'students.id')
+            ->join('school_classes', 'students.school_class_id', '=', 'school_classes.id')
+            ->where('transactions.type', 'masuk')
+            ->select('students.id as student_id', 'students.name as student_name', 'students.nisn as nisn', 'school_classes.name as class_name', DB::raw('SUM(transactions.amount) as total_paid'))
+            ->groupBy('students.id', 'students.name', 'students.nisn', 'school_classes.name')
+            ->orderByDesc('total_paid')
+            ->limit(10)
+            ->get();
+
         return view('public.landing', [
-            'classes' => $classes
+            'classes' => $classes,
+            'topPayers' => $topPayers,
         ]);
+    }
+
+    /**
+     * Return student's transactions (JSON) for modal detail on landing page.
+     */
+    public function studentTransactions($studentId)
+    {
+        $student = Student::with(['transactions' => function($q) {
+            $q->orderBy('date', 'desc');
+        }])->findOrFail($studentId);
+
+        $data = [
+            'id' => $student->id,
+            'name' => $student->name,
+            'nisn' => $student->nisn,
+            'class_name' => optional($student->schoolClass)->name,
+            'transactions' => $student->transactions->map(function($t){
+                return [
+                    'id' => $t->id,
+                    'type' => $t->type,
+                    'amount' => $t->amount,
+                    'date' => $t->date,
+                    'description' => $t->description,
+                    'proof_image' => $t->proof_image,
+                ];
+            }),
+        ];
+
+        return response()->json($data);
     }
 
     /**
@@ -45,15 +87,18 @@ class PublicController extends Controller
         $class = SchoolClass::where('slug', $slug)->firstOrFail();
         $class_id = $class->id;
 
-        // 2. Hitung Saldo Kas (All Time)
-        $totalMasuk = Transaction::where('school_class_id', $class_id)->where('type', 'masuk')->sum('amount');
-        $totalKeluar = Transaction::where('school_class_id', $class_id)->where('type', 'keluar')->sum('amount');
-        $saldoAkhir = $totalMasuk - $totalKeluar;
+        // 2. Hitung Saldo Kas (Optimized)
+        $sums = Transaction::where('school_class_id', $class_id)
+                    ->selectRaw("SUM(CASE WHEN type = 'masuk' THEN amount ELSE 0 END) as total_masuk")
+                    ->selectRaw("SUM(CASE WHEN type = 'keluar' THEN amount ELSE 0 END) as total_keluar")
+                    ->first();
+        
+        $saldoAkhir = ($sums->total_masuk ?? 0) - ($sums->total_keluar ?? 0);
 
         // 3. Hitung Tagihan Wajib
         $startDate = Carbon::parse('2025-07-21');
         $today = Carbon::now();
-        $startOfMonth = $today->copy()->startOfMonth(); // Awal bulan ini
+        $startOfMonth = $today->copy()->startOfMonth();
 
         $periodsPassed = 0;
         if ($class->tagihan_tipe == 'mingguan') {
@@ -65,22 +110,26 @@ class PublicController extends Controller
         }
         $totalWajibBayar = $periodsPassed * $class->tagihan_nominal;
 
-        // 4. Ambil Siswa & Hitung Ranking + Data Grafik Donat
-        $students = Student::where('school_class_id', $class_id)->get();
+        // 4. AMBIL SISWA + TRANSAKSI DETILNYA (PENTING!)
+        // Kita gunakan 'with' untuk mengambil rincian transaksi (history)
+        $students = Student::where('school_class_id', $class_id)
+            ->with(['transactions' => function($query) {
+                // Ambil hanya pemasukan, urutkan dari terbaru
+                $query->where('type', 'masuk')->orderBy('date', 'desc');
+            }])
+            ->get();
         
+        // Hitung manual total bayar dari data yang sudah di-load (biar hemat query)
         $siswaLunas = 0;
         $siswaNunggak = 0;
 
         foreach ($students as $student) {
-            $student->total_paid = $student->transactions()->where('type', 'masuk')->sum('amount');
+            // Hitung total dari collection transactions
+            $student->total_paid = $student->transactions->sum('amount');
             $student->tunggakan = $totalWajibBayar - $student->total_paid;
 
-            // Hitung untuk grafik donat
-            if ($student->tunggakan > 0) {
-                $siswaNunggak++;
-            } else {
-                $siswaLunas++;
-            }
+            if ($student->tunggakan > 0) $siswaNunggak++;
+            else $siswaLunas++;
         }
 
         // Ranking Logic
@@ -91,31 +140,30 @@ class PublicController extends Controller
             }) + 1;
         }
 
-        // Filter Tampilan Table
+        // Filter Tampilan
         $sort = $request->input('sort', 'absen');
         if ($sort == 'tertinggi') $students = $students->sortByDesc('total_paid');
         elseif ($sort == 'terendah') $students = $students->sortBy('total_paid');
         else $students = $students->sortBy('nomor_absen');
 
-        // 5. Ambil Pengeluaran (List)
+        // 5. Ambil Pengeluaran
         $pengeluaran = Transaction::where('school_class_id', $class_id)
                                 ->where('type', 'keluar')
                                 ->orderBy('date', 'desc')
+                                ->limit(50) 
                                 ->get();
 
-        // === DATA BARU UNTUK GRAFIK ===
-        
-        // A. Data Akumulasi Bulan Ini (Grafik Batang)
-        $totalMasukBulanIni = Transaction::where('school_class_id', $class_id)
-                                        ->where('type', 'masuk')
-                                        ->whereBetween('date', [$startOfMonth, $today])
-                                        ->sum('amount');
-        $totalKeluarBulanIni = Transaction::where('school_class_id', $class_id)
-                                        ->where('type', 'keluar')
-                                        ->whereBetween('date', [$startOfMonth, $today])
-                                        ->sum('amount');
+        // 6. Data Grafik
+        $monthlyStats = Transaction::where('school_class_id', $class_id)
+                            ->whereBetween('date', [$startOfMonth, $today])
+                            ->selectRaw("SUM(CASE WHEN type = 'masuk' THEN amount ELSE 0 END) as masuk")
+                            ->selectRaw("SUM(CASE WHEN type = 'keluar' THEN amount ELSE 0 END) as keluar")
+                            ->first();
 
-        // B. Data Progres 30 Hari (Grafik Area)
+        $totalMasukBulanIni = $monthlyStats->masuk ?? 0;
+        $totalKeluarBulanIni = $monthlyStats->keluar ?? 0;
+
+        // Data Progres 30 Hari
         $dates = [];
         $pemasukanPerHari = [];
         $pengeluaranPerHari = [];
@@ -125,10 +173,14 @@ class PublicController extends Controller
             $dates[] = $tgl->format('d M'); 
             $dbDate = $tgl->format('Y-m-d');
 
-            $pemasukanPerHari[] = Transaction::where('school_class_id', $class_id)
-                                    ->where('type', 'masuk')->where('date', $dbDate)->sum('amount');
-            $pengeluaranPerHari[] = Transaction::where('school_class_id', $class_id)
-                                    ->where('type', 'keluar')->where('date', $dbDate)->sum('amount');
+            $daily = Transaction::where('school_class_id', $class_id)
+                        ->where('date', $dbDate)
+                        ->selectRaw("SUM(CASE WHEN type = 'masuk' THEN amount ELSE 0 END) as masuk")
+                        ->selectRaw("SUM(CASE WHEN type = 'keluar' THEN amount ELSE 0 END) as keluar")
+                        ->first();
+
+            $pemasukanPerHari[] = $daily->masuk ?? 0;
+            $pengeluaranPerHari[] = $daily->keluar ?? 0;
         }
 
         return view('public.show_class', [
@@ -138,7 +190,6 @@ class PublicController extends Controller
             'pengeluaran' => $pengeluaran,
             'totalWajibBayar' => $totalWajibBayar,
             'currentSort' => $sort,
-            // Kirim Data Grafik
             'siswaLunas' => $siswaLunas,
             'siswaNunggak' => $siswaNunggak,
             'totalMasukBulanIni' => $totalMasukBulanIni,

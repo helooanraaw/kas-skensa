@@ -28,4 +28,9 @@ class Student extends Model
         // Siswa punya banyak Transaksi
         return $this->hasMany(Transaction::class);
     }
+
+    public function schoolClass()
+    {
+        return $this->belongsTo(SchoolClass::class);
+    }
 }

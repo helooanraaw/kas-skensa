@@ -5,6 +5,7 @@ use App\Http\Controllers\PublicController; // Pastikan ini ada
 use App\Http\Controllers\Admin\DashboardController; // Pastikan ini ada
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\TreasurerSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,8 @@ Route::get('/kas', [PublicController::class, 'index'])->name('kas.index');
 
 // Halaman detail kas per kelas
 Route::get('/kas/{slug}', [PublicController::class, 'showClass'])->name('kas.show'); 
+// API: student transactions (used by landing page modal)
+Route::get('/student/{id}/transactions', [PublicController::class, 'studentTransactions'])->name('student.transactions');
 // -------------------------
 
 
@@ -69,4 +72,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/profile/update', [DashboardController::class, 'updateProfile'])->name('admin.profile.update');
 
     Route::delete('/dashboard/profile/avatar', [DashboardController::class, 'deleteAvatar'])->name('admin.profile.delete_avatar');
+
+    Route::get('/dashboard/settings', [TreasurerSettingsController::class, 'index'])->name('admin.settings.index');
+    Route::put('/dashboard/settings', [TreasurerSettingsController::class, 'update'])->name('admin.settings.update');
+
 });

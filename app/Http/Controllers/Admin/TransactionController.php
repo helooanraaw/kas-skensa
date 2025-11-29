@@ -14,6 +14,7 @@ class TransactionController extends Controller
 
     public function storePemasukan(Request $request)
     {
+        $request->merge(['amount' => str_replace('.', '', $request->amount)]);
         // 1. Validasi
         $request->validate([
             'student_id' => 'required|exists:students,id',
@@ -40,6 +41,7 @@ class TransactionController extends Controller
 
     public function storePengeluaran(Request $request)
     {
+        $request->merge(['amount' => str_replace('.', '', $request->amount)]);
         // 1. Validasi
         $request->validate([
             'description' => 'required|string',
@@ -160,6 +162,7 @@ class TransactionController extends Controller
     {
         // Ambil ID Kelas Bendahara
         $class_id = auth()->user()->school_class_id;
+        $class = \App\Models\SchoolClass::find($class_id);
 
         // --- (Data Siswa, ini sudah ada) ---
         $students = Student::where('school_class_id', $class_id)
@@ -169,11 +172,11 @@ class TransactionController extends Controller
         // --- ✅ KODE BARU DIMULAI DARI SINI ---
 
         // 1. Ambil 5 transaksi terakhir (urut dari yg terbaru)
-        $latestTransactions = Transaction::where('school_class_id', $class_id)
-                                        ->orderBy('date', 'desc') // Urut dari tanggal terbaru
-                                        ->orderBy('created_at', 'desc') // Jika tanggal sama, urut dari jam input
-                                        // ->limit(5) // Ambil 5 saja
-                                        ->get();
+       $latestTransactions = Transaction::where('school_class_id', $class_id)
+                                         ->with('student') // ✅ TAMBAHKAN INI
+                                         ->orderBy('date', 'desc')
+                                         ->orderBy('created_at', 'desc')
+                                         ->get();
 
         // 2. Hitung Total Saldo
         $totalMasuk = Transaction::where('school_class_id', $class_id)
@@ -193,6 +196,7 @@ class TransactionController extends Controller
             'students' => $students,
             'latestTransactions' => $latestTransactions, // <-- Data baru
             'saldoAkhir' => $saldoAkhir,           // <-- Data baru
+            'class' => $class,
         ]);
     }
 
@@ -211,4 +215,5 @@ class TransactionController extends Controller
         // Kirim filter ke Class Export
         return Excel::download(new TransactionsExport($class_id, $bulan, $tahun), $fileName);
     }
+
 }

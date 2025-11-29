@@ -25,9 +25,14 @@
     <div class="row mb-4 g-4">
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white fw-bold py-3 border-bottom-0 text-success">
-                    <i class="bi bi-arrow-down-circle-fill me-2"></i>INPUT PEMASUKAN
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-success"><i class="bi bi-arrow-down-circle-fill me-2"></i>INPUT PEMASUKAN</span>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Atur Nominal Kas">
+                        <i class="bi bi-gear-fill me-1"></i> Atur Kas
+                    </button>
                 </div>
+
                 <div class="card-body">
                     <form action="{{ route('admin.transactions.store.in') }}" method="POST">
                         @csrf
@@ -43,7 +48,7 @@
                         <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <label class="form-label small text-muted">Jumlah (Rp)</label>
-                                <input type="number" class="form-control" name="amount" placeholder="5000" required>
+                                <input type="text" class="form-control input-rupiah" name="amount" value="{{ number_format($class->tagihan_nominal, 0, ',', '.') }}" required>
                             </div>
                             <div class="col-6">
                                 <label class="form-label small text-muted">Tanggal</label>
@@ -75,7 +80,7 @@
                         <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <label class="form-label small text-muted">Jumlah (Rp)</label>
-                                <input type="number" class="form-control" name="amount" placeholder="15000" required>
+                                <input type="text" class="form-control input-rupiah" name="amount" placeholder="15.000" required>
                             </div>
                             <div class="col-6">
                                 <label class="form-label small text-muted">Tanggal</label>
@@ -85,7 +90,7 @@
                         <div class="mb-4">
                             <label class="form-label small text-muted">Bukti (Foto/Video)</label>
                             <input type="file" class="form-control" name="proof_image" accept="image/*,video/*">
-                            <div class="form-text small">Max 20MB.</div>
+                            <div class="form-text small">Bisa upload foto (.jpg, .png) atau video (.mp4). Max 20MB.</div>
                         </div>
                         <button type="submit" class="btn btn-danger w-100 fw-bold">Simpan Pengeluaran</button>
                     </form>
@@ -99,20 +104,43 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white fw-bold py-3 d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-clock-history me-2"></i>Riwayat Transaksi</span>
-                    <small class="text-muted fst-italic small">Klik pada baris untuk lihat detail</small>
+                    <small class="text-muted fst-italic small">Klik baris untuk detail</small>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <div class="table-responsive" id="transactionsTableWrap" style="max-height: 500px; overflow-y: auto; position: relative;">
+                        <!-- Selection toolbar (hidden until selection mode) -->
+                        <div id="selectionToolbar" class="d-none position-absolute" style="top:12px; right:28px; z-index:70;">
+                            <div style="display:flex; gap:8px; align-items:center; padding:6px 8px; background: rgba(255,255,255,0.98); border-radius:8px; box-shadow: 0 8px 20px rgba(16,24,40,0.06);">
+                                <button id="bulkDeleteBtn" class="btn btn-danger btn-sm">Hapus Terpilih</button>
+                                <button id="cancelSelectionBtn" class="btn btn-secondary btn-sm">Batal</button>
+                            </div>
+                        </div>
+
+                        <style>
+                        /* Selection checkbox visibility */
+                        #transactionsTableWrap .row-select { display: none; }
+                        #transactionsTableWrap.selection-mode .row-select { display: inline-block; }
+                        #transactionsTableWrap.selection-mode tbody tr { cursor: pointer; }
+                        #transactionsTableWrap .row-checkbox-cell { width: 48px; }
+
+                        /* Toolbar tweaks to avoid collisions with scrollbar and header */
+                        #selectionToolbar > div > .btn { white-space: nowrap; }
+                        @media (max-width: 575px) {
+                            #selectionToolbar { right: 8px !important; top: 8px !important; }
+                        }
+                        </style>
+
                         <table class="table table-hover mb-0 align-middle">
                             <thead class="bg-light sticky-top" style="top: 0; z-index: 5;">
                                 <tr>
+                                    <th class="ps-4 row-checkbox-cell"></th>
                                     <th class="ps-4">Tanggal</th>
                                     <th>Tipe</th>
                                     <th>Keterangan</th>
                                     <th class="text-end pe-4">Jumlah</th>
-                                    </tr>
+                                </tr>
                             </thead>
-                            <tbody>
+                           <tbody>
                                 @forelse($latestTransactions as $transaction)
                                     <tr style="cursor: pointer;"
                                         data-bs-toggle="modal" 
@@ -124,7 +152,11 @@
                                         data-who="{{ $transaction->type == 'masuk' ? ($transaction->student->name ?? '-') : 'Keperluan Kelas' }}"
                                         data-img="{{ $transaction->proof_image ? asset('storage/' . $transaction->proof_image) : '' }}"
                                         data-delete="{{ route('admin.transactions.destroy', $transaction->id) }}">
-                                        
+
+                                        <td class="row-checkbox-cell ps-4">
+                                            <input type="checkbox" class="row-select form-check-input" value="{{ $transaction->id }}" aria-label="Pilih transaksi {{ $transaction->id }}">
+                                        </td>
+
                                         <td class="ps-4 text-muted small text-nowrap">
                                             {{ \Carbon\Carbon::parse($transaction->date)->format('d M Y') }}
                                         </td>
@@ -139,13 +171,18 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="fw-bold text-dark text-truncate" style="max-width: 200px;">
-                                            {{ $transaction->description }}
-                                            <div class="small text-muted fw-normal">
+                                        <td class="text-dark text-truncate" style="max-width: 250px;">
+                                            <span class="fw-bold d-block" style="font-size: 1rem;">{{ $transaction->description }}</span>
+                                            
+                                            <div class="mt-1">
                                                 @if($transaction->type == 'masuk' && $transaction->student)
-                                                    Oleh: {{ $transaction->student->name }}
+                                                    <span style="color: #4A7AB3 !important; font-weight: 800; font-size: 0.9rem;">
+                                                        <i class="bi bi-person-fill me-1"></i>{{ $transaction->student->name }}
+                                                    </span>
                                                 @else
-                                                    Keperluan Kelas
+                                                    <span class="text-secondary fw-bold" style="font-size: 0.85rem;">
+                                                        <i class="bi bi-shop me-1"></i>Keperluan Kelas
+                                                    </span>
                                                 @endif
                                             </div>
                                         </td>
@@ -155,7 +192,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">Belum ada transaksi.</td>
+                                        <td colspan="5" class="text-center py-5 text-muted">Belum ada transaksi.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -167,12 +204,104 @@
     </div>
 </div>
 
+<!-- Bulk delete confirmation modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-white">
+                <h5 class="modal-title text-danger"><i class="bi bi-trash-fill me-2"></i> Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="bulkDeleteMessage">Anda akan menghapus <strong id="bulkDeleteCount">0</strong> transaksi. Tindakan ini tidak dapat dibatalkan.</p>
+
+                <div id="bulkDeleteListWrap" style="max-height:220px; overflow:auto;">
+                    <ul id="bulkDeleteList" class="list-group list-group-flush">
+                        <!-- items populated dynamically -->
+                    </ul>
+                </div>
+
+                <p class="text-muted small mt-3">Pilih "Ya, Hapus" untuk melanjutkan atau "Batal" untuk kembali.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="bulkDeleteConfirmBtn" class="btn btn-danger">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk delete confirmation modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-white">
+                <h5 class="modal-title text-danger"><i class="bi bi-trash-fill me-2"></i> Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="bulkDeleteMessage">Anda akan menghapus <strong id="bulkDeleteCount">0</strong> transaksi. Tindakan ini tidak dapat dibatalkan.</p>
+
+                <div id="bulkDeleteListWrap" style="max-height:220px; overflow:auto;">
+                    <ul id="bulkDeleteList" class="list-group list-group-flush">
+                        <!-- items populated dynamically -->
+                    </ul>
+                </div>
+
+                <p class="text-muted small mt-3">Pilih "Ya, Hapus" untuk melanjutkan atau "Batal" untuk kembali.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="bulkDeleteConfirmBtn" class="btn btn-danger">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-white border-bottom-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-sliders me-2 text-primary"></i>Pengaturan Kas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.settings.update') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body p-4 pt-0">
+                    <div class="alert alert-light border text-muted small mb-3">
+                        <i class="bi bi-info-circle me-1"></i> Pengaturan ini hanya berlaku untuk kelas <strong>{{ $class->name }}</strong>.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Nominal Tagihan (Rp)</label>
+                        <input type="text" class="form-control input-rupiah fw-bold text-dark" name="tagihan_nominal" value="{{ number_format($class->tagihan_nominal, 0, ',', '.') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Periode Penagihan</label>
+                        <select class="form-select" name="tagihan_tipe" required>
+                            <option value="harian" {{ $class->tagihan_tipe == 'harian' ? 'selected' : '' }}>Harian (Setiap Hari)</option>
+                            <option value="mingguan" {{ $class->tagihan_tipe == 'mingguan' ? 'selected' : '' }}>Mingguan (1x Seminggu)</option>
+                            <option value="bulanan" {{ $class->tagihan_tipe == 'bulanan' ? 'selected' : '' }}>Bulanan (1x Sebulan)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill">Simpan Pengaturan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header border-0 bg-primary text-white p-4 position-relative">
-                <h5 class="modal-title fw-bold position-relative z-1">Detail Transaksi</h5>
-                <button type="button" class="btn-close btn-close-white position-relative z-1" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0 bg-primary text-white p-4">
+                <h5 class="modal-title fw-bold">Detail Transaksi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="text-center py-4 bg-light border-bottom">
@@ -253,7 +382,6 @@
         </div>
     </div>
 </div>
-
 @endsection
 
 @push('scripts')
@@ -262,12 +390,8 @@
     var fullMediaModal = document.getElementById('fullMediaModal');
 
     detailModal.addEventListener('show.bs.modal', function (event) {
-        // Mendeteksi elemen pemicu (bisa TR atau BUTTON)
         var trigger = event.relatedTarget;
-        // Jika klik terjadi di dalam TR, pastikan kita ambil TR-nya
         var tr = trigger.closest('tr'); 
-        
-        // Ambil data dari atribut TR
         var type = tr.getAttribute('data-type');
         var amount = tr.getAttribute('data-amount');
         var date = tr.getAttribute('data-date');
@@ -276,14 +400,12 @@
         var imgUrl = tr.getAttribute('data-img');
         var deleteUrl = tr.getAttribute('data-delete');
 
-        // Isi Modal
         document.getElementById('modalAmount').textContent = amount;
         document.getElementById('modalDate').textContent = date;
         document.getElementById('modalDesc').textContent = desc;
         document.getElementById('modalWho').textContent = who;
         document.getElementById('modalDeleteForm').action = deleteUrl;
 
-        // Badge Warna
         var badge = document.getElementById('modalTypeBadge');
         if (type === 'masuk') {
             badge.className = 'badge bg-success rounded-pill px-3 py-2 mb-2';
@@ -293,7 +415,6 @@
             badge.innerHTML = '<i class="bi bi-arrow-up me-1"></i> Pengeluaran';
         }
 
-        // Media Logic (Foto/Video)
         var proofArea = document.getElementById('modalProofArea');
         var previewImg = document.getElementById('modalImg');
         var previewVideoIcon = document.getElementById('modalVideoIcon');
@@ -329,5 +450,149 @@
         video.pause();
         video.currentTime = 0;
     });
+
+    // --- MULTI SELECT (RIGHT-CLICK) & BULK DELETE ---
+    (function(){
+        const tableWrap = document.getElementById('transactionsTableWrap');
+        if (!tableWrap) return;
+        const tbody = tableWrap.querySelector('tbody');
+        const toolbar = document.getElementById('selectionToolbar');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const cancelBtn = document.getElementById('cancelSelectionBtn');
+        const csrf = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
+
+        function enterSelectionMode() {
+            tableWrap.classList.add('selection-mode');
+            toolbar.classList.remove('d-none');
+        }
+
+        function exitSelectionMode() {
+            tableWrap.classList.remove('selection-mode');
+            toolbar.classList.add('d-none');
+            tableWrap.querySelectorAll('.row-select').forEach(cb => cb.checked = false);
+        }
+
+        // Right-click on a row to enter selection mode and select that row
+        tbody.addEventListener('contextmenu', function(e){
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+            e.preventDefault();
+            enterSelectionMode();
+            const cb = tr.querySelector('.row-select');
+            if (cb) cb.checked = true;
+        });
+
+        // Click on a row when in selection mode toggles its checkbox
+        tbody.addEventListener('click', function(e){
+            if (!tableWrap.classList.contains('selection-mode')) return;
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+            // Prevent opening modal when clicking checkbox or selection mode
+            const cb = tr.querySelector('.row-select');
+            if (!cb) return;
+            // Toggle checkbox
+            cb.checked = !cb.checked;
+            e.stopPropagation();
+        }, true);
+
+        // Bulk delete handler (uses modal confirmation and list)
+        const bulkDeleteModalEl = document.getElementById('bulkDeleteModal');
+        const bulkDeleteModal = bulkDeleteModalEl ? new bootstrap.Modal(bulkDeleteModalEl) : null;
+        const bulkDeleteConfirmBtn = document.getElementById('bulkDeleteConfirmBtn');
+        const bulkDeleteCountEl = document.getElementById('bulkDeleteCount');
+
+        function gatherSelectedRows() {
+            return Array.from(tableWrap.querySelectorAll('.row-select:checked')).map(cb => cb.closest('tr'));
+        }
+
+        // Simple inline toast helper placed inside the table wrapper
+        function showInlineToast(message, type) {
+            const existing = document.getElementById('inlineToast');
+            if (existing) existing.remove();
+            const wrap = document.createElement('div');
+            wrap.id = 'inlineToast';
+            wrap.style.position = 'absolute';
+            wrap.style.top = '12px';
+            wrap.style.left = '12px';
+            wrap.style.zIndex = 90;
+            wrap.innerHTML = `<div class="alert alert-${type === 'danger' ? 'danger' : (type === 'warning' ? 'warning' : 'success')} border-0 shadow-sm mb-0">${message}</div>`;
+            tableWrap.appendChild(wrap);
+            setTimeout(() => { try{ wrap.remove(); }catch(e){} }, 2800);
+        }
+
+        bulkDeleteBtn.addEventListener('click', function(){
+            const rows = gatherSelectedRows();
+            if (rows.length === 0) { showInlineToast('Pilih transaksi terlebih dahulu.', 'warning'); return; }
+
+            // populate list inside modal
+            const listEl = document.getElementById('bulkDeleteList');
+            if (listEl) {
+                listEl.innerHTML = '';
+                const maxShow = 50; // safe cap
+                rows.slice(0, maxShow).forEach(tr => {
+                    const date = tr.getAttribute('data-date') || '';
+                    const desc = tr.getAttribute('data-desc') || tr.querySelector('td:nth-child(4)')?.innerText || '';
+                    const amount = tr.getAttribute('data-amount') || tr.querySelector('td:last-child')?.innerText || '';
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-start small';
+                    li.innerHTML = `<div><strong class="text-dark">${desc}</strong><div class="text-muted small">${date}</div></div><div class="fw-bold text-primary ms-3">${amount}</div>`;
+                    listEl.appendChild(li);
+                });
+                if (rows.length > maxShow) {
+                    const moreLi = document.createElement('li');
+                    moreLi.className = 'list-group-item small text-muted text-center';
+                    moreLi.innerText = `+ ${rows.length - maxShow} lainnya...`;
+                    listEl.appendChild(moreLi);
+                }
+            }
+
+            if (bulkDeleteCountEl) bulkDeleteCountEl.textContent = rows.length;
+            if (bulkDeleteModal) bulkDeleteModal.show();
+        });
+
+        // Confirm deletion from modal
+        if (bulkDeleteConfirmBtn) {
+            bulkDeleteConfirmBtn.addEventListener('click', function(){
+                const rows = gatherSelectedRows();
+                if (rows.length === 0) { if (bulkDeleteModal) bulkDeleteModal.hide(); return; }
+                bulkDeleteConfirmBtn.disabled = true;
+                bulkDeleteConfirmBtn.innerHTML = 'Menghapus...';
+
+                const promises = rows.map(tr => {
+                    const url = tr.getAttribute('data-delete');
+                    return fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    }).then(resp => ({ resp, tr }));
+                });
+
+                Promise.all(promises).then(results => {
+                    let successCount = 0;
+                    results.forEach(r => {
+                        if (r.resp.ok) { r.tr.remove(); successCount++; }
+                    });
+                    exitSelectionMode();
+                    if (bulkDeleteModal) bulkDeleteModal.hide();
+                    showInlineToast(successCount + ' transaksi berhasil dihapus.', 'success');
+                }).catch(err => {
+                    console.error(err);
+                    showInlineToast('Terjadi kesalahan saat menghapus. Coba lagi.', 'danger');
+                }).finally(() => {
+                    bulkDeleteConfirmBtn.disabled = false;
+                    bulkDeleteConfirmBtn.innerHTML = 'Ya, Hapus';
+                });
+            });
+        }
+
+        cancelBtn.addEventListener('click', function(){ exitSelectionMode(); });
+
+        // Escape key cancels selection mode
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') exitSelectionMode(); });
+    })();
 </script>
 @endpush

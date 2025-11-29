@@ -114,10 +114,26 @@ class DashboardController extends Controller
         
         $students = \App\Models\Student::where('school_class_id', $class_id)->get();
         $siswaLunas = 0; $siswaNunggak = 0;
+        
+       foreach ($students as $student) {
+            $student->total_paid = $student->transactions()->where('type', 'masuk')->sum('amount');
+            $student->tunggakan = $totalWajibBayar - $student->total_paid;
+       }
+
+        // Hitung berapa siswa yang lunas / nunggak berdasarkan tunggakan
         foreach ($students as $student) {
-            $totalSudahBayar = $student->transactions()->where('type', 'masuk')->sum('amount');
-            if (($totalWajibBayar - $totalSudahBayar) > 0) $siswaNunggak++; else $siswaLunas++;
+            if ($student->tunggakan <= 0) {
+                $siswaLunas++;
+            } else {
+                $siswaNunggak++;
+            }
         }
+
+        // Ambil 5 Paling Rajin (Total Bayar Tertinggi)
+        $topRajin = $students->sortByDesc('total_paid')->take(5);
+        
+        // Ambil 5 Paling Nunggak (Tunggakan Tertinggi)
+        $topNunggak = $students->sortByDesc('tunggakan')->take(5);
 
         // 6. LOGIKA GRAFIK AREA (Progres Harian di Bulan Terpilih)
         $dates = [];
@@ -138,15 +154,18 @@ class DashboardController extends Controller
         // 7. KIRIM DATA KE VIEW
         return view('admin.dashboard', [
             'saldoAkhir' => $saldoAkhir,
-            'totalMasukPeriode' => $totalMasukPeriode, // Ganti nama variabel
-            'totalKeluarPeriode' => $totalKeluarPeriode, // Ganti nama variabel
+            'totalMasukPeriode' => $totalMasukPeriode, // Variabel ini sesuaikan dengan filter tadi
+            'totalKeluarPeriode' => $totalKeluarPeriode,
             'siswaLunas' => $siswaLunas,
             'siswaNunggak' => $siswaNunggak,
             'dates' => $dates,
             'pemasukanPerHari' => $pemasukanPerHari,
             'pengeluaranPerHari' => $pengeluaranPerHari,
-            'selectedBulan' => $bulan, // Kirim filter yg dipilih
-            'selectedTahun' => $tahun  // Kirim filter yg dipilih
+            'selectedBulan' => $bulan,
+            'selectedTahun' => $tahun,
+            // ✅ DATA BARU
+            'topRajin' => $topRajin,
+            'topNunggak' => $topNunggak
         ]);
     }
 }
