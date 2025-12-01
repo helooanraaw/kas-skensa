@@ -13,7 +13,7 @@
                     <small class="fw-bold text-black-50 letter-spacing-1">SEMESTER GANJIL 2024/2025</small>
                 </div>
 
-                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.1; color: #fff;">
+                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.1; color: #fff; font-size: clamp(4rem,4.5vw,3rem);">
                     OpenKas Skensa,<br>
                     <span style="color: var(--skensa-blue);">Sistem Kas Digital.</span>
                 </h1>

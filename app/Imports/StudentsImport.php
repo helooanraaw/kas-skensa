@@ -24,13 +24,23 @@ class StudentsImport implements ToModel, WithHeadingRow
     // 2. Fungsi ini akan dijalankan untuk SETIAP BARIS di Excel
     public function model(array $row)
     {
-        // $row['nomor_absen'] akan membaca kolom 'nomor_absen' di Excel
+        // Support either 'nisn' or 'nis' header in the Excel file (some templates use 'nis')
+        $nomor_absen = isset($row['nomor_absen']) ? trim((string) $row['nomor_absen']) : null;
+        $name = isset($row['name']) ? trim((string) $row['name']) : null;
+
+        // prefer 'nisn' if present, otherwise accept 'nis'
+        $nisValue = null;
+        if (isset($row['nisn']) && $row['nisn'] !== null && $row['nisn'] !== '') {
+            $nisValue = trim((string) $row['nisn']);
+        } elseif (isset($row['nis']) && $row['nis'] !== null && $row['nis'] !== '') {
+            $nisValue = trim((string) $row['nis']);
+        }
 
         return new Student([
-            'school_class_id' => $this->class_id, // Masukkan ID Kelas
-            'nomor_absen'     => $row['nomor_absen'],
-            'name'            => $row['name'],
-            'nisn'            => $row['nisn'],
+            'school_class_id' => $this->class_id,
+            'nomor_absen'     => $nomor_absen,
+            'name'            => $name,
+            'nisn'            => $nisValue,
         ]);
     }
 }
