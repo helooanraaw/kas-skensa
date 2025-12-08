@@ -10,16 +10,16 @@
 
 :root {
     /* -- KEMBALIKAN NAMA VARIABEL (Agar HTML Dashboard terbaca) -- */
-    --skensa-blue: #4A7AB3;       /* Biru Utama */
-    --skensa-dark-blue: #1C2A45;  /* Navy Gelap (Penting untuk Kartu Saldo!) */
-    --skensa-teal: #2AA5A5;       /* Teal (Penting untuk Kartu Pemasukan!) */
+    --skensa-blue: #2563EB;       /* Biru Utama (Vibrant) */
+    --skensa-dark-blue: #0F172A;  /* Navy Gelap (Deep Navy) */
+    --skensa-teal: #0D9488;       /* Teal (Vibrant Teal) */
     
     /* -- Warna UI -- */
     --bg-body: #F8FAFC;           /* Abu-abu sangat bersih */
     --bg-surface: #FFFFFF;        /* Putih Murni */
-    --text-main: #334155;         /* Teks Gelap */
+    --text-main: #1E293B;         /* Teks Gelap (Darker) */
     --text-muted: #64748B;        /* Teks Abu-abu */
-    --border-light: #E2E8F0;      /* Garis halus */
+    --border-light: #CBD5E1;      /* Garis halus (More Visible) */
 }
 
 /* --- 2. GLOBAL --- */
@@ -121,8 +121,8 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--skensa-blue);
 }
 .btn-primary:hover {
-    background-color: #365E8D;
-    border-color: #365E8D;
+    background-color: #1D4ED8;
+    border-color: #1D4ED8;
 }
 
 .btn-success {
@@ -130,8 +130,8 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--skensa-teal);
 }
 .btn-success:hover {
-    background-color: #218080;
-    border-color: #218080;
+    background-color: #0F766E;
+    border-color: #0F766E;
 }
 
 .btn-outline-primary {

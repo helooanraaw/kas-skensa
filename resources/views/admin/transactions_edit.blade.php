@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+{{-- SECTION CONTENT: Halaman Edit Transaksi --}}
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
@@ -8,25 +9,30 @@
                 <div class="card-header">Edit Transaksi (ID: {{ $transaction->id }})</div>
                 <div class="card-body">
 
+                    {{-- Form Update Transaksi --}}
                     <form action="{{ route('admin.transactions.update', $transaction->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
+                        {{-- Input Tanggal --}}
                         <div class="mb-3">
                             <label for="date" class="form-label">Tanggal</label>
                             <input type="date" class="form-control" id="date" name="date" value="{{ $transaction->date }}" required>
                         </div>
 
+                        {{-- Input Keterangan --}}
                         <div class="mb-3">
                             <label for="description" class="form-label">Keterangan</label>
                             <input type="text" class="form-control" id="description" name="description" value="{{ $transaction->description }}" required>
                         </div>
 
+                        {{-- Input Jumlah --}}
                         <div class="mb-3">
                             <label for="amount" class="form-label">Jumlah (Rp)</label>
                             <input type="number" class="form-control" id="amount" name="amount" value="{{ $transaction->amount }}" required>
                         </div>
 
+                        {{-- Jika Pemasukan: Edit Siswa yg bayar --}}
                         @if($transaction->type == 'masuk')
                             <div class="mb-3">
                                 <label for="student_id" class="form-label">Siswa</label>
@@ -40,6 +46,7 @@
                             </div>
                         @endif
 
+                        {{-- Jika Pengeluaran: Edit Bukti Foto --}}
                         @if($transaction->type == 'keluar')
                             <div class="mb-3">
                                 <label for="proof_image" class="form-label">Ganti Foto Nota (Opsional)</label>
@@ -50,6 +57,7 @@
                             </div>
                         @endif
 
+                        {{-- Tombol Aksi --}}
                         <button type="submit" class="btn btn-success">Update Transaksi</button>
                         <a href="{{ route('admin.transactions.index') }}" class="btn btn-secondary">Batal</a>
                     </form>

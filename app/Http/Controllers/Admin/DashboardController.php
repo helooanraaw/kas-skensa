@@ -107,10 +107,13 @@ class DashboardController extends Controller
                                         ->sum('amount');
 
         // 5. LOGIKA GRAFIK DONAT (STATUS SISWA - ALL TIME)
-        $startDate = \Carbon\Carbon::parse('2025-07-21'); // Asumsi Tgl Mulai Tahun Ajaran
-        $today = \Carbon\Carbon::now();
-        $periodsPassed = $class->tagihan_tipe == 'mingguan' ? $startDate->diffInWeeks($today) : $startDate->diffInMonths($today);
-        $totalWajibBayar = $periodsPassed * $class->tagihan_nominal;
+        // 5. LOGIKA GRAFIK DONAT (STATUS SISWA - ALL TIME)
+        // [LOGIKA DEMO] Agar muncul warna Biru dan Merah:
+        // Lunas = Siswa yang sudah bayar (berapapun nominalnya).
+        // Nunggak = Siswa yang belum bayar sama sekali (Rp 0).
+        $totalWajibBayar = 1; 
+
+
         
         $students = \App\Models\Student::where('school_class_id', $class_id)->get();
         $siswaLunas = 0; $siswaNunggak = 0;

@@ -25,7 +25,7 @@ class PublicController extends Controller
             ->select('students.id as student_id', 'students.name as student_name', 'students.nisn as nisn', 'school_classes.name as class_name', DB::raw('SUM(transactions.amount) as total_paid'))
             ->groupBy('students.id', 'students.name', 'students.nisn', 'school_classes.name')
             ->orderByDesc('total_paid')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         return view('public.landing', [

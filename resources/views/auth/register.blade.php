@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+{{-- SECTION CONTENT: Halaman Registrasi (Biasanya dibatasi untuk Admin/Bendahara Baru) --}}
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
@@ -8,9 +9,11 @@
                 <div class="card-header">{{ __('Register') }}</div>
 
                 <div class="card-body">
+                    {{-- Form Registrasi Akun Baru --}}
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
+                        {{-- Input Nama Lengkap --}}
                         <div class="row mb-3">
                             <label for="name" class="col-md-4 col-form-label text-md-end">{{ __('Name') }}</label>
 
@@ -25,6 +28,7 @@
                             </div>
                         </div>
 
+                        {{-- Input Email --}}
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
 
@@ -39,6 +43,7 @@
                             </div>
                         </div>
 
+                        {{-- Input Password --}}
                         <div class="row mb-3">
                             <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
 
@@ -53,6 +58,7 @@
                             </div>
                         </div>
 
+                        {{-- Input Konfirmasi Password --}}
                         <div class="row mb-3">
                             <label for="password-confirm" class="col-md-4 col-form-label text-md-end">{{ __('Confirm Password') }}</label>
 
@@ -61,6 +67,7 @@
                             </div>
                         </div>
 
+                        {{-- Tombol Submit --}}
                         <div class="row mb-0">
                             <div class="col-md-6 offset-md-4">
                                 <button type="submit" class="btn btn-primary">

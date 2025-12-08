@@ -1,24 +1,30 @@
 <!doctype html>
+{{-- LAYOUT UTAMA APLIKASI --}}
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{-- CSRF Token untuk keamanan request Ajax --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'OpenKas Skensa') }}</title>
 
     <link rel="icon" type="image/png" href="{{ asset('images/wallet-icon.png') }}">
 
+    {{-- Fonts: Inter --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+    {{-- Styles: Bootstrap, Icons, Cropper, Custom CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     
+    {{-- Animation Library --}}
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
+    {{-- SweetAlert2 untuk Pop-up cantik --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -90,27 +96,34 @@
 <body class="d-flex flex-column min-vh-100">
     <div id="app" class="flex-grow-1">
         
+        {{-- NAVBAR UTAMA --}}
         <nav class="navbar navbar-expand-md navbar-light bg-white sticky-top border-bottom">
             <div class="container position-relative">
                 
+                {{-- Logo Kiri --}}
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
                     <i class="bi bi-wallet2 fs-3" style="color: var(--skensa-blue);"></i>
                     <span class="fw-bold" style="color: var(--skensa-dark-blue); letter-spacing: -0.5px;">OpenKas</span>
                 </a>
 
+                {{-- Tombol Toggler Mobile --}}
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
+                {{-- Menu Navbar --}}
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     
+                    {{-- Bagian Tengah (Menu Navigasi) --}}
                     <ul class="navbar-nav absolute-center fw-bold small text-uppercase ls-1">
                         @guest
+                            {{-- Menu Tamu --}}
                             <li class="nav-item"><a class="nav-link px-3" href="{{ url('/') }}">Beranda</a></li>
                             <li class="nav-item"><a class="nav-link px-3" href="{{ url('/#daftar-kelas') }}">Kelas</a></li>
                             <li class="nav-item"><a class="nav-link px-3" href="{{ url('/#fitur') }}">Fitur</a></li>
                             <li class="nav-item"><a class="nav-link px-3" href="{{ url('/#faq') }}">FAQ</a></li>
                         @else
+                            {{-- Menu Admin Login --}}
                             <li class="nav-item"><a class="nav-link px-3 {{ Request::is('/') ? 'text-primary' : '' }}" href="{{ url('/') }}"><i class="bi bi-house-door me-1"></i> Beranda</a></li>
                             <li class="nav-item"><a class="nav-link px-3 {{ Request::is('dashboard') ? 'text-primary' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
                             <li class="nav-item"><a class="nav-link px-3 {{ Request::is('dashboard/students*') ? 'text-primary' : '' }}" href="{{ route('admin.students.index') }}"><i class="bi bi-people me-1"></i> Siswa</a></li>
@@ -118,6 +131,7 @@
                         @endguest
                     </ul>
 
+                    {{-- Bagian Kanan (Auth & Profil) --}}
                     <ul class="navbar-nav ms-auto">
                         @guest
                             <li class="nav-item">
@@ -132,6 +146,7 @@
                                         <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=4A7AB3&color=fff" class="nav-avatar shadow-sm">
                                     @endif
                                 </a>
+                                {{-- Dropdown Menu Profil --}}
                                 <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 rounded-3 p-2" style="min-width: 220px;">
                                     <div class="px-3 py-2 border-bottom mb-2">
                                         <span class="fw-bold d-block text-dark">{{ Auth::user()->name }}</span>
@@ -157,13 +172,16 @@
             </div>
         </nav>
 
+        {{-- Overlay untuk Mobile Drawer --}}
         <div class="nav-drawer-overlay" id="navDrawerOverlay" aria-hidden="true"></div>
 
         <main>
+            {{-- KONTEN HALAMAN UTAMA --}}
             @yield('content')
         </main>
     </div>
 
+    {{-- MODAL EDIT PROFIL (Hanya untuk User Login) --}}
     @auth
     <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
@@ -175,6 +193,7 @@
                 <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body p-4">
+                        {{-- Upload Avatar UI (Bulat) --}}
                         <div class="text-center mb-4">
                             <div class="position-relative d-inline-block">
                                 <img id="avatarPreview" 
@@ -185,17 +204,16 @@
                                     <i class="bi bi-camera-fill"></i>
                                 </label>
                                 @if(Auth::user()->avatar)
-                                    <form action="{{ route('admin.profile.delete_avatar') }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus foto?');">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="position-absolute top-0 end-0 bg-danger text-white border border-white rounded-circle p-1 shadow-sm" style="width: 25px; height: 25px; transform: translate(20%, -20%); display: flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="confirmDeleteAvatar()" class="position-absolute top-0 end-0 bg-danger text-white border border-white rounded-circle p-1 shadow-sm" style="width: 25px; height: 25px; transform: translate(20%, -20%); display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-x"></i>
+                                    </button>
                                 @endif
                             </div>
                         </div>
                         <input type="file" id="avatarInput" class="d-none" accept="image/*">
                         <input type="hidden" name="avatar_cropped" id="avatarCropped">
+                        
+                        {{-- Form Text Inputs --}}
                         <div class="mb-3"><label class="small fw-bold text-muted">Nama</label><input type="text" class="form-control" name="name" value="{{ Auth::user()->name }}" required></div>
                         <div class="mb-3"><label class="small fw-bold text-muted">Email</label><input type="email" class="form-control" name="email" value="{{ Auth::user()->email }}" required></div>
                         <hr>
@@ -204,12 +222,19 @@
                         <div class="text-end"><button type="submit" class="btn btn-primary px-4 fw-bold">Simpan</button></div>
                     </div>
                 </form>
+                {{-- Form Hidden Delete Avatar --}}
+                <form id="deleteAvatarForm" action="{{ route('admin.profile.delete_avatar') }}" method="POST" class="d-none">
+                    @csrf @method('DELETE')
+                </form>
             </div>
         </div>
     </div>
+    
+    {{-- MODAL CROPPER (Untuk memotong foto profil) --}}
     <div class="modal fade" id="cropperModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Potong Foto</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><div class="img-container"><img id="imageToCrop" src="" style="max-width: 100%;"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="button" class="btn btn-primary" id="cropButton">Simpan</button></div></div></div></div>
     @endauth
 
+    {{-- SCRIPTS LIB --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -219,7 +244,7 @@
         // 1. Inisialisasi Animasi Scroll (AOS)
         AOS.init({ duration: 800, once: true });
 
-        // 2. Format Rupiah Otomatis
+        // 2. Format Rupiah Otomatis (Global untuk semua input class 'input-rupiah')
         document.addEventListener('DOMContentLoaded', function() {
             const rupiahInputs = document.querySelectorAll('.input-rupiah');
             rupiahInputs.forEach(input => {
@@ -262,8 +287,7 @@
             });
         @endif
 
-        // 4. Logika Cropper (Foto Profil)
-        // (Logika cropper yang sama seperti sebelumnya, disingkat agar rapi)
+        // 4. Logika Cropper (Foto Profil Management)
         var avatarInput = document.getElementById('avatarInput');
         if(avatarInput) {
             var imageToCrop = document.getElementById('imageToCrop');
@@ -273,6 +297,7 @@
             var cropperModalEl = document.getElementById('cropperModal');
             var cropperModal = new bootstrap.Modal(cropperModalEl);
 
+            // Saat file gambar dipilih
             avatarInput.addEventListener('change', function (e) {
                 var files = e.target.files;
                 if (files && files.length > 0) {
@@ -281,22 +306,60 @@
                     reader.readAsDataURL(files[0]);
                 }
             });
+            // Saat modal cropper terbuka
             cropperModalEl.addEventListener('shown.bs.modal', function () {
                 cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1 });
             });
+            // Saat modal cropper tertutup
             cropperModalEl.addEventListener('hidden.bs.modal', function () {
                 cropper.destroy(); cropper = null; avatarInput.value = '';
             });
+            // Saat tombol simpan crop ditekan
             document.getElementById('cropButton').addEventListener('click', function () {
                 cropper.getCroppedCanvas({ width: 300, height: 300 }).toBlob(function (blob) {
                     var reader = new FileReader();
                     reader.readAsDataURL(blob); 
                     reader.onloadend = function () {
-                        avatarCroppedInput.value = reader.result;
-                        avatarPreview.src = reader.result;
+                        avatarCroppedInput.value = reader.result; // Simpan base64 ke hidden field
+                        avatarPreview.src = reader.result; // Update preview
                         cropperModal.hide();
                     }
                 });
+            });
+        }
+
+        // 5. Konfirmasi Hapus Avatar (SweetAlert2)
+        function confirmDeleteAvatar() {
+            Swal.fire({
+                title: 'Hapus Foto Profil?',
+                text: "Foto profil akan dikembalikan ke inisial nama.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DC3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                background: '#fff',
+                color: '#1C2A45',
+                customClass: {
+                    popup: 'rounded-2 shadow-lg border-0 font-inter',
+                    title: 'fw-bold fs-5',
+                    htmlContainer: 'text-muted small',
+                    confirmButton: 'btn btn-danger btn-sm px-4 fw-bold rounded-pill shadow-sm',
+                    cancelButton: 'btn btn-light btn-sm px-4 fw-bold rounded-pill border me-2'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memproses...',
+                        timer: 1000,
+                        showConfirmButton: false,
+                        willOpen: () => { Swal.showLoading() }
+                    });
+                    document.getElementById('deleteAvatarForm').submit();
+                }
             });
         }
     </script>

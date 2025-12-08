@@ -3,6 +3,7 @@
 @section('content')
 <div class="container pt-4 pb-5">
     
+    {{-- ALERT SALDONE: Card besar menampilkan saldo terkini --}}
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm bg-white">
@@ -16,26 +17,32 @@
         </div>
     </div>
 
+    {{-- Alert Success: Muncul setelah submit data --}}
     @if (session('success'))
         <div class="alert alert-success border-0 shadow-sm mb-4">
             <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
         </div>
     @endif
 
+    {{-- GRID INPUT FORM (Pemasukan & Pengeluaran) --}}
     <div class="row mb-4 g-4">
+        {{-- CARD KIRI: Input Pemasukan SK --}}
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                     <span class="fw-bold text-success"><i class="bi bi-arrow-down-circle-fill me-2"></i>INPUT PEMASUKAN</span>
                     
+                    {{-- Tombol Setting Nominal/Tipe Kas --}}
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Atur Nominal Kas">
                         <i class="bi bi-gear-fill me-1"></i> Atur Kas
                     </button>
                 </div>
 
                 <div class="card-body">
+                    {{-- Form Pemasukan --}}
                     <form action="{{ route('admin.transactions.store.in') }}" method="POST">
                         @csrf
+                        {{-- Select Siswa --}}
                         <div class="mb-3">
                             <label class="form-label small text-muted">Pilih Siswa</label>
                             <select class="form-select" name="student_id" required>
@@ -46,15 +53,18 @@
                             </select>
                         </div>
                         <div class="row g-2 mb-3">
+                            {{-- Input Jumlah (Auto fill nominal wajib) --}}
                             <div class="col-6">
                                 <label class="form-label small text-muted">Jumlah (Rp)</label>
                                 <input type="text" class="form-control input-rupiah" name="amount" value="{{ number_format($class->tagihan_nominal, 0, ',', '.') }}" required>
                             </div>
+                            {{-- Input Tanggal --}}
                             <div class="col-6">
                                 <label class="form-label small text-muted">Tanggal</label>
                                 <input type="date" class="form-control" name="date" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
+                        {{-- Input Keterangan --}}
                         <div class="mb-4">
                             <label class="form-label small text-muted">Keterangan</label>
                             <input type="text" class="form-control" name="description" placeholder="Contoh: Kas Minggu 1" required>
@@ -65,12 +75,14 @@
             </div>
         </div>
 
+        {{-- CARD KANAN: Input Pengeluaran --}}
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header bg-white fw-bold py-3 border-bottom-0 text-danger">
                     <i class="bi bi-arrow-up-circle-fill me-2"></i>INPUT PENGELUARAN
                 </div>
                 <div class="card-body">
+                    {{-- Form Pengeluaran --}}
                     <form action="{{ route('admin.transactions.store.out') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-3">
@@ -87,6 +99,7 @@
                                 <input type="date" class="form-control" name="date" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
+                        {{-- Upload Bukti Foto --}}
                         <div class="mb-4">
                             <label class="form-label small text-muted">Bukti (Foto/Video)</label>
                             <input type="file" class="form-control" name="proof_image" accept="image/*,video/*">
@@ -99,6 +112,7 @@
         </div>
     </div>
 
+    {{-- CARD DAFTAR RIWAYAT TRANSAKSI --}}
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -108,7 +122,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive" id="transactionsTableWrap" style="max-height: 500px; overflow-y: auto; position: relative;">
-                        <!-- Selection toolbar (hidden until selection mode) -->
+                        <!-- Toolbar Pilihan (Disembunyikan sampai mode pilih aktif) -->
                         <div id="selectionToolbar" class="d-none position-absolute" style="top:12px; right:28px; z-index:70;">
                             <div style="display:flex; gap:8px; align-items:center; padding:6px 8px; background: rgba(255,255,255,0.98); border-radius:8px; box-shadow: 0 8px 20px rgba(16,24,40,0.06);">
                                 <button id="bulkDeleteBtn" class="btn btn-danger btn-sm">Hapus Terpilih</button>
@@ -117,19 +131,20 @@
                         </div>
 
                         <style>
-                        /* Selection checkbox visibility */
+                        /* Styling untuk checkbox seleksi */
                         #transactionsTableWrap .row-select { display: none; }
                         #transactionsTableWrap.selection-mode .row-select { display: inline-block; }
                         #transactionsTableWrap.selection-mode tbody tr { cursor: pointer; }
                         #transactionsTableWrap .row-checkbox-cell { width: 48px; }
 
-                        /* Toolbar tweaks to avoid collisions with scrollbar and header */
+                        /* Toolbar tweaks agar tidak menabrak header */
                         #selectionToolbar > div > .btn { white-space: nowrap; }
                         @media (max-width: 575px) {
                             #selectionToolbar { right: 8px !important; top: 8px !important; }
                         }
                         </style>
 
+                        {{-- Tabel Transaksi --}}
                         <table class="table table-hover mb-0 align-middle">
                             <thead class="bg-light sticky-top" style="top: 0; z-index: 5;">
                                 <tr>
@@ -142,6 +157,7 @@
                             </thead>
                            <tbody>
                                 @forelse($latestTransactions as $transaction)
+                                    {{-- Baris Transaksi --}}
                                     <tr style="cursor: pointer;"
                                         data-bs-toggle="modal" 
                                         data-bs-target="#detailModal"
@@ -154,6 +170,7 @@
                                         data-delete="{{ route('admin.transactions.destroy', $transaction->id) }}">
 
                                         <td class="row-checkbox-cell ps-4">
+                                            {{-- Checkbox untuk seleksi massal --}}
                                             <input type="checkbox" class="row-select form-check-input" value="{{ $transaction->id }}" aria-label="Pilih transaksi {{ $transaction->id }}">
                                         </td>
 
@@ -174,6 +191,7 @@
                                         <td class="text-dark text-truncate" style="max-width: 250px;">
                                             <span class="fw-bold d-block" style="font-size: 1rem;">{{ $transaction->description }}</span>
                                             
+                                            {{-- Sub-teks (Nama Siswa atau Keperluan Kelas) --}}
                                             <div class="mt-1">
                                                 @if($transaction->type == 'masuk' && $transaction->student)
                                                     <span style="color: #4A7AB3 !important; font-weight: 800; font-size: 0.9rem;">
@@ -204,7 +222,7 @@
     </div>
 </div>
 
-<!-- Bulk delete confirmation modal -->
+{{-- MODAL #1: KONFIRMASI HAPUS MASAL (Bulk Delete) --}}
 <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -217,7 +235,7 @@
 
                 <div id="bulkDeleteListWrap" style="max-height:220px; overflow:auto;">
                     <ul id="bulkDeleteList" class="list-group list-group-flush">
-                        <!-- items populated dynamically -->
+                        <!-- List item akan diisi via Javascript -->
                     </ul>
                 </div>
 
@@ -231,33 +249,7 @@
     </div>
 </div>
 
-<!-- Bulk delete confirmation modal -->
-<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-white">
-                <h5 class="modal-title text-danger"><i class="bi bi-trash-fill me-2"></i> Konfirmasi Hapus</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p id="bulkDeleteMessage">Anda akan menghapus <strong id="bulkDeleteCount">0</strong> transaksi. Tindakan ini tidak dapat dibatalkan.</p>
-
-                <div id="bulkDeleteListWrap" style="max-height:220px; overflow:auto;">
-                    <ul id="bulkDeleteList" class="list-group list-group-flush">
-                        <!-- items populated dynamically -->
-                    </ul>
-                </div>
-
-                <p class="text-muted small mt-3">Pilih "Ya, Hapus" untuk melanjutkan atau "Batal" untuk kembali.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" id="bulkDeleteConfirmBtn" class="btn btn-danger">Ya, Hapus</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+{{-- MODAL #2: PENGATURAN KAS (Atur Nominal & Periode Tagihan) --}}
 <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -296,6 +288,7 @@
     </div>
 </div>
 
+{{-- MODAL #3: DETAIL TRANSAKSI --}}
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -324,10 +317,12 @@
                         </div>
                     </div>
 
+                    {{-- Area Bukti Foto (Hidden jika kosong) --}}
                     <div id="modalProofArea" class="d-none">
                         <label class="small text-muted fw-bold text-uppercase ls-1 mb-2">Bukti Transaksi</label>
                         <button class="btn p-0 w-100 border rounded-3 overflow-hidden position-relative shadow-sm" 
                                 data-bs-target="#fullMediaModal" data-bs-toggle="modal">
+                            {{-- Preview Bukti --}}
                             <div class="ratio ratio-16x9 bg-dark d-flex align-items-center justify-content-center">
                                 <img id="modalImg" src="" class="w-100 h-100 object-fit-cover d-none">
                                 <div id="modalVideoIcon" class="text-white d-none">
@@ -345,6 +340,7 @@
                 </div>
             </div>
             <div class="modal-footer bg-light border-0 p-3">
+                {{-- Form Delete (Hapus) --}}
                 <form id="modalDeleteForm" action="" method="POST" onsubmit="return confirm('Yakin hapus data ini?');">
                     @csrf
                     @method('DELETE')
@@ -356,6 +352,7 @@
     </div>
 </div>
 
+{{-- MODAL #4: FULL SIZE PROOF PREVIEW (Gede) --}}
 <div class="modal fade" id="fullMediaModal" aria-hidden="true" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 bg-transparent shadow-none">
@@ -364,8 +361,10 @@
                 <div class="bg-black rounded-4 overflow-hidden d-flex align-items-center justify-content-center position-relative" 
                      style="height: 85vh; width: 100%;">
                     
+                    {{-- Full Image Element --}}
                     <img id="fullImageSrc" src="" class="d-none" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                     
+                    {{-- Full Video Element --}}
                     <video id="fullVideoSrc" controls class="d-none" style="max-width: 100%; max-height: 100%;">
                         <source src="" type="video/mp4">
                         Browser Anda tidak mendukung tag video.
@@ -386,12 +385,17 @@
 
 @push('scripts')
 <script>
+    // --- LOGIKA MODAL DETAIL & MEDIA PREVIEW ---
     var detailModal = document.getElementById('detailModal');
     var fullMediaModal = document.getElementById('fullMediaModal');
 
+    // Event saat modal detail dibuka
     detailModal.addEventListener('show.bs.modal', function (event) {
+        // Ambil data dari tombol pemicu (row tabel)
         var trigger = event.relatedTarget;
         var tr = trigger.closest('tr'); 
+        
+        // Ambil atribut data-*
         var type = tr.getAttribute('data-type');
         var amount = tr.getAttribute('data-amount');
         var date = tr.getAttribute('data-date');
@@ -400,12 +404,14 @@
         var imgUrl = tr.getAttribute('data-img');
         var deleteUrl = tr.getAttribute('data-delete');
 
+        // Isi konten modal
         document.getElementById('modalAmount').textContent = amount;
         document.getElementById('modalDate').textContent = date;
         document.getElementById('modalDesc').textContent = desc;
         document.getElementById('modalWho').textContent = who;
         document.getElementById('modalDeleteForm').action = deleteUrl;
 
+        // Atur badge tipe (Masuk/Keluar)
         var badge = document.getElementById('modalTypeBadge');
         if (type === 'masuk') {
             badge.className = 'badge bg-success rounded-pill px-3 py-2 mb-2';
@@ -415,6 +421,7 @@
             badge.innerHTML = '<i class="bi bi-arrow-up me-1"></i> Pengeluaran';
         }
 
+        // Logic Preview Media (Foto/Video)
         var proofArea = document.getElementById('modalProofArea');
         var previewImg = document.getElementById('modalImg');
         var previewVideoIcon = document.getElementById('modalVideoIcon');
@@ -423,6 +430,7 @@
 
         if (imgUrl) {
             proofArea.classList.remove('d-none');
+            // Cek ekstensi file untuk menentukan video/gambar
             var extension = imgUrl.split('.').pop().toLowerCase();
             var isVideo = ['mp4', 'mov', 'avi', 'mkv'].includes(extension);
 
@@ -431,27 +439,28 @@
                 previewVideoIcon.classList.remove('d-none');
                 fullImg.classList.add('d-none');
                 fullVideo.classList.remove('d-none');
-                fullVideo.src = imgUrl;
+                fullVideo.src = imgUrl; // Set source video
             } else {
                 previewImg.src = imgUrl;
                 previewImg.classList.remove('d-none');
                 previewVideoIcon.classList.add('d-none');
                 fullVideo.classList.add('d-none');
                 fullImg.classList.remove('d-none');
-                fullImg.src = imgUrl;
+                fullImg.src = imgUrl; // Set source gambar
             }
         } else {
             proofArea.classList.add('d-none');
         }
     });
 
+    // Reset video saat modal full ditutup agar suara tidak bocor
     fullMediaModal.addEventListener('hide.bs.modal', function () {
         var video = document.getElementById('fullVideoSrc');
         video.pause();
         video.currentTime = 0;
     });
 
-    // --- MULTI SELECT (RIGHT-CLICK) & BULK DELETE ---
+    // --- LOGIKA MULTI SELECT (KLIK KANAN) & HAPUS MASSAL ---
     (function(){
         const tableWrap = document.getElementById('transactionsTableWrap');
         if (!tableWrap) return;
@@ -461,51 +470,55 @@
         const cancelBtn = document.getElementById('cancelSelectionBtn');
         const csrf = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
 
+        // Masuk mode seleksi
         function enterSelectionMode() {
             tableWrap.classList.add('selection-mode');
             toolbar.classList.remove('d-none');
         }
 
+        // Keluar mode seleksi
         function exitSelectionMode() {
             tableWrap.classList.remove('selection-mode');
             toolbar.classList.add('d-none');
+            // Uncheck semua
             tableWrap.querySelectorAll('.row-select').forEach(cb => cb.checked = false);
         }
 
-        // Right-click on a row to enter selection mode and select that row
+        // Event: Klik Kanan pada baris
         tbody.addEventListener('contextmenu', function(e){
             const tr = e.target.closest('tr');
             if (!tr) return;
-            e.preventDefault();
+            e.preventDefault(); // Cegah menu browser
             enterSelectionMode();
             const cb = tr.querySelector('.row-select');
-            if (cb) cb.checked = true;
+            if (cb) cb.checked = true; // Auto select baris yang diklik kanan
         });
 
-        // Click on a row when in selection mode toggles its checkbox
+        // Event: Klik Kiri saat mode seleksi aktif (Toggle Checkbox)
         tbody.addEventListener('click', function(e){
             if (!tableWrap.classList.contains('selection-mode')) return;
             const tr = e.target.closest('tr');
             if (!tr) return;
-            // Prevent opening modal when clicking checkbox or selection mode
+            // Cegah event modal (biar gak muncul modal detail)
             const cb = tr.querySelector('.row-select');
             if (!cb) return;
-            // Toggle checkbox
+            
             cb.checked = !cb.checked;
-            e.stopPropagation();
-        }, true);
+            e.stopPropagation(); // Stop event bubbling
+        }, true); // Use capture phase
 
-        // Bulk delete handler (uses modal confirmation and list)
+        // --- BULK DELETE LOGIC ---
         const bulkDeleteModalEl = document.getElementById('bulkDeleteModal');
         const bulkDeleteModal = bulkDeleteModalEl ? new bootstrap.Modal(bulkDeleteModalEl) : null;
         const bulkDeleteConfirmBtn = document.getElementById('bulkDeleteConfirmBtn');
         const bulkDeleteCountEl = document.getElementById('bulkDeleteCount');
 
         function gatherSelectedRows() {
+            // Ambil semua tr yang checkboxnya dicentang
             return Array.from(tableWrap.querySelectorAll('.row-select:checked')).map(cb => cb.closest('tr'));
         }
 
-        // Simple inline toast helper placed inside the table wrapper
+        // Helper untuk tampilkan pesan toast kecil
         function showInlineToast(message, type) {
             const existing = document.getElementById('inlineToast');
             if (existing) existing.remove();
@@ -520,24 +533,28 @@
             setTimeout(() => { try{ wrap.remove(); }catch(e){} }, 2800);
         }
 
+        // Klik tombol Hapus Terpilih
         bulkDeleteBtn.addEventListener('click', function(){
             const rows = gatherSelectedRows();
             if (rows.length === 0) { showInlineToast('Pilih transaksi terlebih dahulu.', 'warning'); return; }
 
-            // populate list inside modal
+            // Isi list di dalam modal konfirmasi
             const listEl = document.getElementById('bulkDeleteList');
             if (listEl) {
                 listEl.innerHTML = '';
-                const maxShow = 50; // safe cap
+                const maxShow = 50; // Batas tampil list agar tidak berat
                 rows.slice(0, maxShow).forEach(tr => {
                     const date = tr.getAttribute('data-date') || '';
                     const desc = tr.getAttribute('data-desc') || tr.querySelector('td:nth-child(4)')?.innerText || '';
                     const amount = tr.getAttribute('data-amount') || tr.querySelector('td:last-child')?.innerText || '';
+                    
                     const li = document.createElement('li');
                     li.className = 'list-group-item d-flex justify-content-between align-items-start small';
                     li.innerHTML = `<div><strong class="text-dark">${desc}</strong><div class="text-muted small">${date}</div></div><div class="fw-bold text-primary ms-3">${amount}</div>`;
                     listEl.appendChild(li);
                 });
+                
+                // Jika lebih dari 50, beri info
                 if (rows.length > maxShow) {
                     const moreLi = document.createElement('li');
                     moreLi.className = 'list-group-item small text-muted text-center';
@@ -550,14 +567,17 @@
             if (bulkDeleteModal) bulkDeleteModal.show();
         });
 
-        // Confirm deletion from modal
+        // Klik Ya Hapus di Modal
         if (bulkDeleteConfirmBtn) {
             bulkDeleteConfirmBtn.addEventListener('click', function(){
                 const rows = gatherSelectedRows();
                 if (rows.length === 0) { if (bulkDeleteModal) bulkDeleteModal.hide(); return; }
+                
+                // UI Loading state
                 bulkDeleteConfirmBtn.disabled = true;
                 bulkDeleteConfirmBtn.innerHTML = 'Menghapus...';
 
+                // Buat array promise fetch delete untuk setiap row
                 const promises = rows.map(tr => {
                     const url = tr.getAttribute('data-delete');
                     return fetch(url, {
@@ -571,11 +591,13 @@
                     }).then(resp => ({ resp, tr }));
                 });
 
+                // Eksekusi semua hapus paralell
                 Promise.all(promises).then(results => {
                     let successCount = 0;
                     results.forEach(r => {
-                        if (r.resp.ok) { r.tr.remove(); successCount++; }
+                        if (r.resp.ok) { r.tr.remove(); successCount++; } // Hapus dari UI jika sukses
                     });
+                    
                     exitSelectionMode();
                     if (bulkDeleteModal) bulkDeleteModal.hide();
                     showInlineToast(successCount + ' transaksi berhasil dihapus.', 'success');
@@ -583,15 +605,17 @@
                     console.error(err);
                     showInlineToast('Terjadi kesalahan saat menghapus. Coba lagi.', 'danger');
                 }).finally(() => {
+                    // Reset tombol modal
                     bulkDeleteConfirmBtn.disabled = false;
                     bulkDeleteConfirmBtn.innerHTML = 'Ya, Hapus';
                 });
             });
         }
 
+        // Tombol Batal
         cancelBtn.addEventListener('click', function(){ exitSelectionMode(); });
 
-        // Escape key cancels selection mode
+        // Tombol Escape Keyboard
         document.addEventListener('keydown', function(e){ if (e.key === 'Escape') exitSelectionMode(); });
     })();
 </script>

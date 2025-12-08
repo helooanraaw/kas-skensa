@@ -3,6 +3,7 @@
 @section('content')
 <div class="container pt-4 pb-5">
     
+    {{-- HEADER CLASS SECTION --}}
     <div class="row align-items-center mb-4">
         <div class="col-md-6">
             <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 rounded-pill border border-primary border-opacity-10">TRANSPARANSI KAS</span>
@@ -11,13 +12,17 @@
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
             <div class="d-inline-block text-start bg-white border rounded-3 p-3 shadow-sm">
-                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Target Wajib</small>
+                {{-- Info Target Wajib Bayar --}}
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">
+                    Target Wajib <i class="bi bi-info-circle ms-1 cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="bottom" style="font-size: 0.8rem;" title="Target ini adalah akumulasi tagihan wajib dari awal tahun ajaran (Mulai Juli) hingga saat ini. Rumus: (Jumlah Minggu/Bulan Berlalu x Nominal Tagihan)."></i>
+                </small>
                 <span class="fw-bold text-dark">Rp {{ number_format($totalWajibBayar, 0, ',', '.') }}</span>
                 <small class="text-muted">/siswa</small>
             </div>
         </div>
     </div>
 
+    {{-- STATS CARDS ROW --}}
     <div class="row mb-4 g-3">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
@@ -26,6 +31,7 @@
                         <div class="bg-primary bg-opacity-10 p-2 rounded text-primary me-3"><i class="bi bi-wallet2 fs-4"></i></div>
                         <h6 class="fw-bold text-muted mb-0 text-uppercase ls-1">Saldo Kas</h6>
                     </div>
+                    {{-- Total Saldo Kas Saat Ini --}}
                     <h2 class="fw-bold text-dark mb-0">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</h2>
                 </div>
             </div>
@@ -37,6 +43,7 @@
                         <div class="bg-info bg-opacity-10 p-2 rounded text-info me-3"><i class="bi bi-tag fs-4"></i></div>
                         <h6 class="fw-bold text-muted mb-0 text-uppercase ls-1">Info Tagihan</h6>
                     </div>
+                    {{-- Nominal Tagihan Rutin --}}
                     <h4 class="fw-bold text-dark mb-1">Rp {{ number_format($class->tagihan_nominal, 0, ',', '.') }}</h4>
                     <small class="text-muted">Per {{ ucfirst($class->tagihan_tipe) }}</small>
                 </div>
@@ -49,6 +56,7 @@
                         <div class="bg-success bg-opacity-10 p-2 rounded text-success me-3"><i class="bi bi-people fs-4"></i></div>
                         <h6 class="fw-bold text-muted mb-0 text-uppercase ls-1">Total Siswa</h6>
                     </div>
+                    {{-- Jumlah Siswa --}}
                     <h4 class="fw-bold text-dark mb-1">{{ count($students) }}</h4>
                     <small class="text-muted">Siswa Terdaftar</small>
                 </div>
@@ -58,10 +66,12 @@
 
     <div class="row g-4 mb-5">
         
+        {{-- TABLE SISWA & RANKING --}}
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-left gap-3">
                     <h6 class="fw-bold mb-0 text-uppercase ls-1"><i class="bi bi-trophy me-2 text-warning"></i>Status & Peringkat</h6>
+                    {{-- Form Filter/Sort --}}
                     <form action="{{ route('kas.show', $class->slug) }}" method="GET">
                         <select name="sort" class="form-select form-select-sm border-0 bg-light fw-bold" style="width: auto; cursor: pointer;" onchange="this.form.submit()">
                             <option value="absen" {{ $currentSort == 'absen' ? 'selected' : '' }}>Urut No. Absen</option>
@@ -89,14 +99,17 @@
                                         onclick="showHistory({{ $student->id }}, '{{ $student->name }}')"
                                         class="{{ $student->rank <= 3 ? 'bg-warning bg-opacity-10' : '' }}">
                                         
+                                        {{-- Data Transaksi Hidden untuk Modal --}}
                                         <input type="hidden" id="history-data-{{ $student->id }}" value="{{ json_encode($student->transactions) }}">
 
+                                        {{-- Kolom Ranking --}}
                                         <td class="ps-4">
                                             @if($student->rank == 1) <span class="badge bg-warning text-dark border border-warning rounded-pill">#1</span>
                                             @elseif($student->rank == 2) <span class="badge bg-secondary text-white border border-secondary rounded-pill">#2</span>
                                             @elseif($student->rank == 3) <span class="badge text-white border border-secondary rounded-pill" style="background-color: #CD7F32;">#3</span>
                                             @else <span class="text-muted fw-bold small ms-2">#{{ $student->rank }}</span> @endif
                                         </td>
+                                        {{-- Kolom Nama Siswa --}}
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold text-secondary border" style="width: 30px; height: 30px; font-size: 0.8rem;">
@@ -105,11 +118,14 @@
                                                 <span class="fw-bold text-dark small">{{ $student->name }}</span>
                                             </div>
                                         </td>
+                                        {{-- Kolom Status Lunas/Nunggak --}}
                                         <td>
                                             @if($student->tunggakan > 0) <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Nunggak</span>
                                             @else <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Lunas</span> @endif
                                         </td>
+                                        {{-- Kolom Total Bayar --}}
                                         <td class="fw-bold text-primary small">Rp {{ number_format($student->total_paid, 0, ',', '.') }}</td>
+                                        {{-- Kolom Selisih (Plus/Minus) --}}
                                         <td class="text-end pe-4 small">
                                             @if($student->tunggakan > 0) <span class="text-danger fw-bold">-{{ number_format($student->tunggakan, 0, ',', '.') }}</span>
                                             @else <span class="text-success fw-bold">+{{ number_format(abs($student->tunggakan), 0, ',', '.') }}</span> @endif
@@ -123,6 +139,7 @@
             </div>
         </div>
 
+        {{-- LIST PENGELUARAN --}}
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3">
@@ -157,8 +174,10 @@
         </div>
     </div>
 
+    {{-- CHART ROW --}}
     <div class="row mb-5 g-4 align-items-stretch">
         <div class="col-lg-4 d-flex flex-column gap-4">
+            {{-- Chart Persentase --}}
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white fw-bold py-3 border-bottom-0 small text-uppercase text-muted">
                     <i class="bi bi-pie-chart me-2"></i>Persentase Ketaatan
@@ -169,6 +188,7 @@
                     </div>
                 </div>
             </div>
+            {{-- Chart Arus Kas --}}
             <div class="card border-0 shadow-sm flex-grow-1">
                 <div class="card-header bg-white fw-bold py-3 border-bottom-0 small text-uppercase text-muted">
                     <i class="bi bi-bar-chart me-2"></i>Arus Kas Bulan Ini
@@ -181,6 +201,7 @@
             </div>
         </div>
         <div class="col-lg-8">
+            {{-- Chart Tren Area --}}
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white fw-bold py-3 border-bottom-0 small text-uppercase text-muted">
                     <i class="bi bi-graph-up-arrow me-2"></i>Tren Kas (30 Hari Terakhir)
@@ -196,6 +217,7 @@
 
 </div>
 
+{{-- MODAL HISTORY SISWA --}}
 <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -210,6 +232,7 @@
 
             <div class="modal-body p-4">
                 
+                {{-- Filter Bulan & Tahun --}}
                 <div class="d-flex gap-2 mb-4">
                     <select id="historyMonthFilter" class="form-select shadow-sm border-primary" onchange="filterHistory()">
                         <option value="all">Semua Bulan</option>
@@ -257,7 +280,7 @@
 
 @push('scripts')
 <script>
-    // --- DATA GRAFIK ---
+    // --- DATA GRAFIK DARI CONTROLLER ---
     const siswaLunas = {{ $siswaLunas }};
     const siswaNunggak = {{ $siswaNunggak }};
     const totalMasuk = {{ $totalMasukBulanIni }};
@@ -266,21 +289,21 @@
     const dataPemasukan = @json($pemasukanPerHari);
     const dataPengeluaran = @json($pengeluaranPerHari);
 
-    // 1. GRAFIK DONAT
+    // 1. INIT GRAFIK DONAT (Status Lunas/Nunggak)
     new Chart(document.getElementById('statusSiswaChart'), {
         type: 'doughnut',
         data: { labels: ['Lunas', 'Nunggak'], datasets: [{ data: [siswaLunas, siswaNunggak], backgroundColor: ['#2AA5A5', '#DC3545'], borderWidth: 0 }] },
         options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } } }, layout: { padding: 10 } }
     });
 
-    // 2. GRAFIK BATANG
+    // 2. INIT GRAFIK BATANG (Masuk vs Keluar)
     new Chart(document.getElementById('akumulasiKasChart'), {
         type: 'bar',
         data: { labels: ['Masuk', 'Keluar'], datasets: [{ label: 'Rupiah', data: [totalMasuk, totalKeluar], backgroundColor: ['#2AA5A5', '#DC3545'], borderRadius: 4, barThickness: 40 }] },
         options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, display: true, grid: { display: true } }, x: { grid: { display: false } } } }
     });
 
-    // 3. GRAFIK AREA
+    // 3. INIT GRAFIK AREA (Tren Harian)
     new Chart(document.getElementById('progresAreaChart'), {
         type: 'line',
         data: { labels: datesLabel, datasets: [{ label: 'Pemasukan', data: dataPemasukan, borderColor: '#2AA5A5', backgroundColor: 'rgba(42, 165, 165, 0.1)', fill: true, tension: 0.4, pointRadius: 2 }, { label: 'Pengeluaran', data: dataPengeluaran, borderColor: '#DC3545', backgroundColor: 'rgba(220, 53, 69, 0.1)', fill: true, tension: 0.4, pointRadius: 2 }] },
@@ -291,15 +314,16 @@
     let currentTransactions = [];
     const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
 
+    // Fungsi: Tampilkan Modal History per Siswa
     function showHistory(studentId, studentName) {
-        // 1. Ambil data transaksi dari input hidden
+        // 1. Ambil data transaksi dari input hidden (parsing JSON)
         const rawData = document.getElementById(`history-data-${studentId}`).value;
         currentTransactions = JSON.parse(rawData);
 
-        // 2. Set Judul
+        // 2. Set Judul Modal
         document.getElementById('historyModalTitle').innerText = "Riwayat: " + studentName;
 
-        // 3. Reset Filter ke bulan ini
+        // 3. Reset Filter ke bulan ini (default)
         const today = new Date();
         document.getElementById('historyMonthFilter').value = today.getMonth() + 1; 
         document.getElementById('historyYearFilter').value = today.getFullYear();
@@ -311,6 +335,7 @@
         historyModal.show();
     }
 
+    // Fungsi: Filter History berdasarkan Bulan/Tahun yang dipilih
     function filterHistory() {
         const month = document.getElementById('historyMonthFilter').value;
         const year = document.getElementById('historyYearFilter').value;
@@ -328,6 +353,7 @@
             const txMonth = date.getMonth() + 1;
             const txYear = date.getFullYear();
 
+            // Jika filter cocok (atau all)
             if ( (month == 'all' || txMonth == month) && (txYear == year) ) {
                 hasData = true;
                 total += parseInt(tx.amount);
@@ -362,5 +388,10 @@
             noDataMsg.classList.remove('d-none');
         }
     }
+    // --- INIT TOOLTIP BOOTSTRAP ---
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
 </script>
 @endpush
