@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+/**
+ * Controller ini otomatis dibuat sama Laravel buat halaman dashboard.
+ * Jadi kalau user berhasil login, biasanya bakal diarahkan ke sini.
+ */
 class HomeController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
+     * Fungsi ini jalan duluan tiap kali controller dipanggil.
+     * Gunanya buat mastiin cuma user yang udah login (auth) yang boleh akses halaman ini.
      */
     public function __construct()
     {
@@ -17,9 +20,7 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * Tampilin halaman dashboard utama buat user yang udah login.
      */
     public function index()
     {

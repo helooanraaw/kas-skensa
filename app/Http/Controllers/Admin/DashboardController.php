@@ -11,9 +11,18 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage; 
 use Illuminate\Support\Facades\Hash;    
 
+/**
+ * Controller ini adalah pusat kendali untuk Dashboard Admin/Bendahara.
+ * Di sini kita ngatur apa saja yang perlu ditampilkan di halaman utama setelah login.
+ */
 class DashboardController extends Controller
 {
 
+    /**
+     * Update Data Profile Admin.
+     * Fungsi ini menangani perubahan Nama, Email, Password, dan Foto Profil admin.
+     * Fiturnya lengkap pake crop gambar segala biar rapi.
+     */
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
@@ -59,6 +68,11 @@ class DashboardController extends Controller
         return back()->with('success', 'Profil berhasil diperbarui!');
     }
 
+    /**
+     * Hapus Foto Profil.
+     * Kalau admin bosen atau salah upload foto, bisa dihapus lewat sini.
+     * Fotonya bakal ilang dari folder penyimpanan dan dari database.
+     */
     public function deleteAvatar()
     {
         $user = auth()->user();
@@ -78,6 +92,15 @@ class DashboardController extends Controller
     }
 
     // TAMBAHKAN FUNGSI INI
+    /**
+     * Menampilkan Halaman Dashboard Utama.
+     * Ini fungsi yang paling sibuk karena harus nyiapin banyak data:
+     * - Saldo kas saat ini
+     * - Pemasukan & Pengeluaran bulan ini (bisa difilter)
+     * - Statistik siswa lunas vs nunggak
+     * - Daftar siswa paling rajin bayar (Top Rajin)
+     * - Data untuk grafik harian
+     */
     public function index(Request $request) // Tambahkan Request
     {
         // 1. AMBIL INPUT FILTER (Default: Bulan & Tahun Sekarang)

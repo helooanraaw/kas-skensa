@@ -6,10 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SchoolClass;
 
+/**
+ * Controller ini buat ngatur target tagihan kas kelas.
+ * Jadi bendahara bisa tentuin sendiri, misal kas kelasnya Rp 2.000 per minggu,
+ * atau Rp 5.000 per bulan. Data ini nanti dipake buat ngitung tunggakan otomatis.
+ */
 class TreasurerSettingsController extends Controller
 {
     /**
      * Tampilkan Form Pengaturan Kelas Saya
+     */
+    /**
+     * Tampilkan halaman formulir pengaturan kas.
      */
     public function index()
     {
@@ -24,6 +32,9 @@ class TreasurerSettingsController extends Controller
 
     /**
      * Simpan Perubahan Pengaturan
+     */
+    /**
+     * Simpan hasil edit pengaturan ke database.
      */
     public function update(Request $request)
     {

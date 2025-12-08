@@ -9,10 +9,15 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controller ini ngurusin semua halaman yang bisa dilihat sama orang umum,
+ * kayak landing page, daftar kelas, dan detail kas per kelas.
+ */
 class PublicController extends Controller
 {
     /**
-     * Menampilkan Halaman Landing Page (Info).
+     * Menampilkan halaman depan utama (Landing Page).
+     * Di sini kita ambil daftar kelas dan juga Top 5 siswa yang paling rajin bayar kas buat dipajang.
      */
     public function landing()
     {
@@ -20,7 +25,7 @@ class PublicController extends Controller
 
         $topPayers = DB::table('transactions')
             ->join('students', 'transactions.student_id', '=', 'students.id')
-            ->join('school_classes', 'students.school_class_id', '=', 'school_classes.id')
+            ->join('s chool_classes', 'students.school_class_id', '=', 'school_classes.id')
             ->where('transactions.type', 'masuk')
             ->select('students.id as student_id', 'students.name as student_name', 'students.nisn as nisn', 'school_classes.name as class_name', DB::raw('SUM(transactions.amount) as total_paid'))
             ->groupBy('students.id', 'students.name', 'students.nisn', 'school_classes.name')
@@ -35,7 +40,8 @@ class PublicController extends Controller
     }
 
     /**
-     * Return student's transactions (JSON) for modal detail on landing page.
+     * Ini buat mengambil data riwayat pembayaran kas dari satu siswa tertentu.
+     * Datanya dikirim dalam bentuk JSON, biasanya dipake buat popup (modal) di landing page.
      */
     public function studentTransactions($studentId)
     {
@@ -64,7 +70,8 @@ class PublicController extends Controller
     }
 
     /**
-     * Menampilkan Halaman Daftar Kelas (24 tombol).
+     * Menampilkan halaman yang isinya daftar semua tombol kelas.
+     * Jadi pengunjung bisa milih mau lihat detail kas kelas yang mana.
      */
     public function index()
     {
@@ -76,7 +83,11 @@ class PublicController extends Controller
     }
 
     /**
-     * Menampilkan halaman detail kas (Tabel Merah/Hijau).
+     * Menampilkan halaman detail kas dari satu kelas yang dipilih.
+     * Di fungsi ini lumayan banyak hitungannya:
+     * - Hitung saldo akhir kelas.
+     * - Cek siapa siswa yang lunas dan siapa yang masih nunggak.
+     * - Siapin data buat grafik pemasukan dan pengeluaran.
      */
     public function showClass(Request $request, $slug)
     {

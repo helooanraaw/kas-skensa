@@ -9,9 +9,17 @@ use Maatwebsite\Excel\Facades\Excel; // <-- 1. TAMBAHKAN INI
 use App\Imports\StudentsImport;
 use Illuminate\Database\QueryException;
 
+/**
+ * Controller ini khusus buat ngurusin data Siswa.
+ * Mulai dari nampilin daftar siswa, ranking bayaran, tambah, edit, hapus,
+ * sampai fitur canggih import data dari Excel.
+ */
 class StudentController extends Controller
 {
-    // FUNGSI UNTUK MENAMPILKAN HALAMAN
+    /**
+     * Menampilkan daftar semua siswa di kelas admin yang login.
+     * Di sini ada fitur ranking otomatis based on siapa yang paling banyak bayar kas.
+     */
     public function index(Request $request)
     {
         $class_id = auth()->user()->school_class_id;
@@ -52,7 +60,9 @@ class StudentController extends Controller
         ]);
     }
 
-    // FUNGSI UNTUK MENYIMPAN DATA DARI FORM
+    /**
+     * Simpan data siswa baru yang diinput manual lewat form.
+     */
     public function store(Request $request)
     {
         // 1. Validasi data yang masuk
@@ -78,6 +88,9 @@ class StudentController extends Controller
                          ->with('success', 'Siswa berhasil ditambahkan.');
     }
 
+    /**
+     * Menampilkan form edit untuk siswa tertentu.
+     */
     public function edit(Student $student)
     {
         // $student adalah data siswa yg diklik (otomatis diambil Laravel)
@@ -111,7 +124,9 @@ class StudentController extends Controller
     }
 
     /**
-     * Hapus data siswa.
+     * Hapus data siswa selamanya.
+     * HATI-HATI: Siswa yang sudah pernah bayar kas TIDAK BOLEH dihapus sembarangan
+     * karena bakal ngerusak laporan keuangan. Jadi sistem akan nolak kalau ada datanya.
      */
     public function destroy(Student $student)
     {
@@ -141,6 +156,10 @@ class StudentController extends Controller
         }
     }
 
+    /**
+     * Fitur Import Excel ajaib.
+     * Upload satu file Excel, ribuan data siswa langsung masuk database.
+     */
     public function importExcel(Request $request)
     {
         // 1. Validasi file

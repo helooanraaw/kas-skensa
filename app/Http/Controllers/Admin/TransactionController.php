@@ -9,9 +9,21 @@ use App\Models\Transaction; // <-- 2. Import
 use Maatwebsite\Excel\Facades\Excel; // <-- 1. TAMBAHKAN INI
 use App\Exports\TransactionsExport;
 
+/**
+ * Controller ini adalah jantungnya aplikasi kas.
+ * Fungsinya buat ngurus keluar-masuk duit:
+ * - Catat Pemasukan (Siswa bayar kas)
+ * - Catat Pengeluaran (Beli sapu, spidol, dll)
+ * - Edit & Hapus Transaksi
+ * - Laporan Excel
+ */
 class TransactionController extends Controller
 {
 
+    /**
+     * Menyimpan data Pemasukan (Uang Masuk).
+     * Pastikan siswa yang bayar jelas dan nominalnya valid.
+     */
     public function storePemasukan(Request $request)
     {
         $request->merge(['amount' => str_replace('.', '', $request->amount)]);
@@ -39,6 +51,10 @@ class TransactionController extends Controller
                          ->with('success', 'Pemasukan berhasil dicatat.');
     }
 
+    /**
+     * Menyimpan data Pengeluaran (Uang Keluar).
+     * Kalau ada bukti nota atau foto barangnya, bisa diupload sekalian di sini.
+     */
     public function storePengeluaran(Request $request)
     {
         $request->merge(['amount' => str_replace('.', '', $request->amount)]);
@@ -74,6 +90,10 @@ class TransactionController extends Controller
                          ->with('success', 'Pengeluaran berhasil dicatat.');
     }
 
+    /**
+     * Tampilkan form edit transaksi.
+     * Ada pengecekan keamanan biar bendahara kelas A gak bisa edit data kelas B.
+     */
     public function edit(Transaction $transaction)
     {
         // Cek Keamanan: Pastikan Bendahara hanya bisa edit transaksi kelasnya sendiri
@@ -94,6 +114,10 @@ class TransactionController extends Controller
 
     /**
      * Update (Simpan) data transaksi yang diedit.
+     */
+    /**
+     * Simpan hasil edit transkasi ke database.
+     * Bisa update nominal, tanggal, keterangan, atau ganti foto bukti.
      */
     public function update(Request $request, Transaction $transaction)
     {
@@ -139,6 +163,10 @@ class TransactionController extends Controller
     /**
      * Hapus data transaksi.
      */
+    /**
+     * Hapus satu data transaksi.
+     * Hati-hati, kalau dihapus saldo kas bakal berubah otomatis.
+     */
     public function destroy(Transaction $transaction)
     {
         // Cek Keamanan
@@ -157,7 +185,10 @@ class TransactionController extends Controller
                         ->with('success', 'Transaksi berhasil dihapus.');
     }
 
-    // FUNGSI UNTUK MENAMPILKAN HALAMAN INPUT (index)
+    /**
+     * Halaman Utama Menu Transaksi.
+     * Isinya form instan buat input masuk/keluar & tabel riwayat transaksi terbaru.
+     */
     public function index()
     {
         // Ambil ID Kelas Bendahara
@@ -200,6 +231,10 @@ class TransactionController extends Controller
         ]);
     }
 
+    /**
+     * Download Laporan Keuangan dalam bentuk Excel.
+     * Bisa filter per bulan atau download semua sekaligus.
+     */
     public function exportExcel(Request $request) // Tambah Request
     {
         $class_id = auth()->user()->school_class_id;
